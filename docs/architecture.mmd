@@ -1,0 +1,14 @@
+flowchart LR
+  subgraph Robot["Robot: rebuilt TurtleBot 1"]
+    CAM[USB webcam] --> PI["Raspberry Pi<br/>usb_cam, send_serial"]
+    PI -- "v,w over serial" --> ARD["Arduino<br/>differential-drive control"] --> MOT[Motors]
+  end
+  subgraph PC["PC: Intel i5-8250U, CPU only"]
+    IT["image_transport<br/>decompress"] --> MASK["masker<br/>ICNet, PyTorch"]
+    IT -- "image" --> SLAM["OpenVSLAM node<br/>image + mask, time-synced"]
+    MASK -- "/mask" --> SLAM
+    SLAM -- "/odom, TF" --> MB["move_base<br/>A* global planner"]
+    MS["map_server<br/>2D occupancy grid"] -- "/map" --> MB
+  end
+  PI -- "compressed images over Wi-Fi" --> IT
+  MB -- "/cmd_vel over Wi-Fi" --> PI
